@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,6 +39,7 @@ class HomePageState extends State<HomePage> {
   int _limitIncrement = 20;
   String _textSearch = "";
   bool isLoading = false;
+  int? index;
 
   late AuthProvider authProvider;
   late String currentUserId;
@@ -74,6 +76,11 @@ class HomePageState extends State<HomePage> {
   void dispose() {
     super.dispose();
     btnClearController.close();
+  }
+
+  void deleteUser(id) async {
+    await FirebaseFirestore.instance.collection("users").doc(id).delete();
+    //snapshot.data.docs[index].id
   }
 
   void registerNotification() {
@@ -289,12 +296,16 @@ class HomePageState extends State<HomePage> {
                         AsyncSnapshot<QuerySnapshot> snapshot) {
                       if (snapshot.hasData) {
                         if ((snapshot.data?.docs.length ?? 0) > 0) {
-                          return ListView.builder(
-                            padding: EdgeInsets.all(10),
-                            itemBuilder: (context, index) =>
-                                buildItem(context, snapshot.data?.docs[index]),
-                            itemCount: snapshot.data?.docs.length,
-                            controller: listScrollController,
+                          return Dismissible(
+                            onDismissed: deleteUser,
+                            key: ObjectKey(snapshot.data!.docs[1].id),
+                            child: ListView.builder(
+                              padding: EdgeInsets.all(10),
+                              itemBuilder: (context, index) => buildItem(
+                                  context, snapshot.data?.docs[index]),
+                              itemCount: snapshot.data?.docs.length,
+                              controller: listScrollController,
+                            ),
                           );
                         } else {
                           return Center(
